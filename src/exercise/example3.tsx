@@ -108,29 +108,142 @@
  *
  * ============================================================================
  */
-
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-/**
- * TODO
- *
- * Build the Deployment Queue page.
- *
- * Expected flow:
- *
- * React Query
- *        ↓
- * Deployment Data
- *        ↓
- * useDeploymentSearch()
- *        ↓
- * DeploymentCard[]
- */
+import DeploymentCard from "./example1";
+import { useDeploymentFilters } from "./example2";
+
+import { Input } from "../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+
+interface Deployment {
+  id: number;
+  application: string;
+  version: string;
+  environment: "Production" | "QA" | "Development" | "Staging";
+  status: "Pending" | "In Progress" | "Completed";
+  priority: "Low" | "Medium" | "High" | "Critical";
+}
+
+const fetchDeployments = async (): Promise<Deployment[]> => {
+  const response = await fetch("/api/deployments");
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch deployments");
+  }
+
+  return response.json();
+};
 
 export default function Example3() {
- // This is a placeholder component to demonstrate the usage of the useQuery hook.
+  const [status, setStatus] = useState("All");
 
-  return <div className="container mx-auto p-6">
-    // You can use the useQuery hook to fetch deployments and display them using the DeploymentCard component.
-  </div>;
+  const {
+    data = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["deployments"],
+    queryFn: fetchDeployments,
+  });
+
+  const {
+    search,
+    setSearch,
+    filteredDeployments,
+  } = useDeploymentFilters(data);
+
+  const deployments =
+    status === "All"
+      ? filteredDeployments
+      : filteredDeployments.filter(
+          (deployment) => deployment.status === status
+        );
+
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center">
+        Loading deployments...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6 text-center text-red-600">
+        Failed to load deployments.
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+
+      <h1 className="text-3xl font-bold">
+        Deployment Queue
+      </h1>
+
+      <div className="text-sm font-medium">
+        Total Deployments : {data.length}
+      </div>
+
+      <div className="flex gap-4">
+
+        <Input
+          placeholder="Search Application"
+          value={search}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSearch(e.target.value)
+          }
+        />
+
+        <Select
+          value={status}
+          onValueChange={setStatus}
+        >
+          <SelectTrigger className="w-52">
+            <SelectValue />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="All">All</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="In Progress">
+              In Progress
+            </SelectItem>
+            <SelectItem value="Completed">
+              Completed
+            </SelectItem>
+            <SelectItem value="Failed">
+              Failed
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+      </div>
+
+      {deployments.length === 0 ? (
+        <div className="text-center py-10">
+          No deployments found.
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {deployments.map((deployment) => (
+            <DeploymentCard
+              key={deployment.id}
+              deployment={deployment}
+            />
+          ))}
+        </div>
+      )}
+
+    </div>
+  );
 }
