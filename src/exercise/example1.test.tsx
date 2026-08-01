@@ -1,69 +1,57 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import  DeploymentCard  from "./DeploymentCard";
+import DeploymentCard from "./example1";
 
-const deployment = {
-  id: "DEP-1001",
+type TestDeployment = {
+  id: number;
+  application: string;
+  version: string;
+  environment: "Production" | "QA" | "Development" | "Staging";
+  status: "Pending" | "In Progress" | "Completed";
+  priority: "Low" | "Medium" | "High" | "Critical";
+};
+
+const deployment: TestDeployment = {
+  id: 1001,
   application: "Customer Portal",
   version: "v4.2.1",
   environment: "Production",
   status: "Pending",
-  requestedBy: "John Smith",
-  requestedAt: "2026-07-18T09:30:00Z",
-  scheduledAt: "2026-07-20T10:00:00Z",
-  region: "US-East",
   priority: "High",
 };
 
 describe("DeploymentCard", () => {
-  it("renders the application name", () => {
+  it("renders the application name and version", () => {
+    render(<DeploymentCard deployment={deployment} />);
+
+    expect(screen.getByText("Customer Portal")).toBeInTheDocument();
+    expect(screen.getByText("Version : v4.2.1")).toBeInTheDocument();
+  });
+
+  it("renders the deployment metadata badges", () => {
+    render(<DeploymentCard deployment={deployment} />);
+
+    expect(screen.getByText("Production")).toBeInTheDocument();
+    expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(screen.getByText("High")).toBeInTheDocument();
+  });
+
+  it("shows the next status in the action button", () => {
     render(<DeploymentCard deployment={deployment} />);
 
     expect(
-      screen.getByText("Customer Portal")
+      screen.getByRole("button", { name: /advance to in progress/i })
     ).toBeInTheDocument();
   });
 
-  it("renders the deployment id", () => {
-    render(<DeploymentCard deployment={deployment} />);
+  it("disables the button when the deployment is completed", () => {
+    render(
+      <DeploymentCard deployment={{ ...deployment, status: "Completed" }} />
+    );
 
     expect(
-      screen.getByText("DEP-1001")
-    ).toBeInTheDocument();
+      screen.getByRole("button", { name: /advance to completed/i })
+    ).toBeDisabled();
   });
-
-  it("renders the version", () => {
-    render(<DeploymentCard deployment={deployment} />);
-
-    expect(
-      screen.getByText("v4.2.1")
-    ).toBeInTheDocument();
-  });
-
-
-  it("renders the deployment status", () => {
-    render(<DeploymentCard deployment={deployment} />);
-
-    expect(
-      screen.getByText("Pending")
-    ).toBeInTheDocument();
-  });
-
-  it("renders the requested by value", () => {
-    render(<DeploymentCard deployment={deployment} />);
-
-    expect(
-      screen.getByText("John Smith")
-    ).toBeInTheDocument();
-  });
-
-  it("renders the scheduled date", () => {
-    render(<DeploymentCard deployment={deployment} />);
-
-    expect(
-      screen.getByText(/2026/i)
-    ).toBeInTheDocument();
-  });
-
 });
