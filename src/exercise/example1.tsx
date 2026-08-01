@@ -107,8 +107,74 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-const DeploymentCard = () => {
-  return <div>DeploymentCard</div>;
+interface Deployment {
+  id: number;
+  application: string;
+  version: string;
+  environment: "Production" | "QA" | "Development" | "Staging";
+  status: "Pending" | "In Progress" | "Completed";
+  priority: "Low" | "Medium" | "High" | "Critical";
+}
+
+interface DeploymentCardProps {
+  deployment: Deployment;
+}
+
+const getNextStatus = (
+  status: Deployment["status"]
+): Deployment["status"] => {
+  switch (status) {
+    case "Pending":
+      return "In Progress";
+    case "In Progress":
+      return "Completed";
+    default:
+      return "Completed";
+  }
+};
+
+const DeploymentCard = ({ deployment }: DeploymentCardProps) => {
+  const nextStatus = getNextStatus(deployment.status);
+
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle>{deployment.application}</CardTitle>
+        <CardDescription>
+          Version : {deployment.version}
+        </CardDescription>
+      </CardHeader>
+
+      <Separator />
+
+      <CardContent className="space-y-4 pt-4">
+        <div className="flex justify-between">
+          <span>Environment</span>
+          <Badge>{deployment.environment}</Badge>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Status</span>
+          <Badge>{deployment.status}</Badge>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Priority</span>
+          <Badge>{deployment.priority}</Badge>
+        </div>
+      </CardContent>
+
+      <CardFooter>
+        <Button
+          className="w-full"
+          disabled={deployment.status === "Completed"}
+        >
+          Advance to {nextStatus}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
 };
 
 export default DeploymentCard;
+
