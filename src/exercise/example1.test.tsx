@@ -1,9 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import  DeploymentCard  from "./DeploymentCard";
+import type { Deployment } from "@/types/deployment";
 
-const deployment = {
+import DeploymentCard from "../pages/example1";
+
+const deployment: Deployment = {
   id: "DEP-1001",
   application: "Customer Portal",
   version: "v4.2.1",
