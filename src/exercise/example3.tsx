@@ -109,28 +109,138 @@
  * ============================================================================
  */
 
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import DeploymentCard from "./DeploymentCard";
+import StatusFilter from "@/components/ui/statusFilter";
+import type { Deployment, Status } from "@/types/deployment";
+import { getDeployments } from "@/api/diploymentApi";
 
-/**
- * TODO
- *
- * Build the Deployment Queue page.
- *
- * Expected flow:
- *
- * React Query
- *        ↓
- * Deployment Data
- *        ↓
- * useDeploymentSearch()
- *        ↓
- * DeploymentCard[]
- */
+function useDeploymentFilters(deployments: Deployment[]) {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
 
-export default function Example3() {
- // This is a placeholder component to demonstrate the usage of the useQuery hook.
+  const filteredDeployments = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+console.log("Selected:", statusFilter);
+console.log("Deployment status:", deployments?.[0]?.status);
+    return deployments.filter((deployment) => {
+      const matchesSearch = deployment.application
+        .toLowerCase()
+        .includes(normalizedSearch);
+      const matchesStatus =
+        statusFilter === "all" || deployment.status?.toLocaleLowerCase() === statusFilter?.toLocaleLowerCase();
 
-  return <div className="container mx-auto p-6">
-    // You can use the useQuery hook to fetch deployments and display them using the DeploymentCard component.
-  </div>;
+      return matchesSearch && matchesStatus;
+    });
+  }, [deployments, search, statusFilter]);
+
+  return {
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    filteredDeployments,
+  };
+}
+
+function useDeployments() {
+  return useQuery<Deployment[]>({
+    queryKey: ["deployments"],
+    queryFn: getDeployments,
+  });
+}
+
+export default function example3() {
+  const { data: deployments, isLoading, isError, error } = useDeployments();
+
+  const {
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    filteredDeployments,
+  } = useDeploymentFilters(deployments ?? []);
+
+  // Grouped counts are a bonus item — computed off the full unfiltered
+  // list so the summary reflects the whole queue, not just what's visible.
+  const statusCounts = useMemo(() => {
+    if (!deployments) return {} as Record<Status, number>;
+    return deployments.reduce((acc, d) => {
+      acc[d.status] = (acc[d.status] ?? 0) + 1;
+      return acc;
+    }, {} as Record<Status, number>);
+  }, [deployments]);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <p className="text-sm text-muted-foreground">Loading deployments...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="container mx-auto p-6">
+        <p className="text-sm text-destructive">
+          Failed to load deployments
+          {error instanceof Error ? `: ${error.message}` : "."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-3 space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold">Deployment Queue</h1>
+        <p className="text-sm text-muted-foreground">
+          Total Deployments: {deployments?.length ?? 0}
+          {" · "}
+          Showing: {filteredDeployments.length}
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Input
+          placeholder="Search by application name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <StatusFilter
+          value={statusFilter === "all" ? "All" : statusFilter}
+          onChange={(value) => {
+            console.log("Selected:", value);
+            const normalizedStatus: Status | "all" =
+              value as Status;
+
+            setStatusFilter(normalizedStatus);
+          }}
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+        {(Object.keys(statusCounts) as Status[]).map((status) => (
+          <span key={status}>
+            {status}: {statusCounts[status]}
+          </span>
+        ))}
+      </div>
+
+      {filteredDeployments.length === 0 ? (
+        <div className="rounded-md border border-dashed p-10 text-center text-sm text-muted-foreground">
+          No deployments match your search or filter.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredDeployments.map((deployment) => (
+            <DeploymentCard key={deployment.id} deployment={deployment} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

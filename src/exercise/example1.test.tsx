@@ -14,7 +14,7 @@ const deployment = {
   scheduledAt: "2026-07-20T10:00:00Z",
   region: "US-East",
   priority: "High",
-};
+} as const;
 
 describe("DeploymentCard", () => {
   it("renders the application name", () => {
