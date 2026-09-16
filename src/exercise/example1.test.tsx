@@ -1,9 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
-import  DeploymentCard  from "./DeploymentCard";
+import DeploymentCard from "./example1";
+import type { Deployment } from "@/types/deployment";
 
-const deployment = {
+const deployment: Deployment = {
   id: "DEP-1001",
   application: "Customer Portal",
   version: "v4.2.1",
@@ -62,8 +63,29 @@ describe("DeploymentCard", () => {
     render(<DeploymentCard deployment={deployment} />);
 
     expect(
-      screen.getByText(/2026/i)
+      screen.getByText(/20 Jul 2026/i)
     ).toBeInTheDocument();
   });
 
+  it("advances a pending deployment through the callback", () => {
+    const onAdvance = vi.fn();
+    render(<DeploymentCard deployment={deployment} onAdvance={onAdvance} />);
+    fireEvent.click(screen.getByRole("button", { name: "Advance to In Progress" }));
+    expect(onAdvance).toHaveBeenCalledWith(deployment.id);
+  });
+
+  it("offers completion for an in-progress deployment", () => {
+    render(<DeploymentCard deployment={{ ...deployment, status: "In Progress" }} onAdvance={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Advance to Completed" })).toBeEnabled();
+  });
+
+  it.each(["Completed", "Failed"] as const)("does not advance %s deployments", (status) => {
+    render(<DeploymentCard deployment={{ ...deployment, status }} onAdvance={vi.fn()} />);
+    expect(screen.getByRole("button")).toBeDisabled();
+  });
+
+  it("disables advancement while saving", () => {
+    render(<DeploymentCard deployment={deployment} onAdvance={vi.fn()} isUpdating />);
+    expect(screen.getByRole("button", { name: "Updating…" })).toBeDisabled();
+  });
 });

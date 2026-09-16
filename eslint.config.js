@@ -19,4 +19,12 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['src/components/ui/{badge,button}.tsx'],
+    rules: {
+      'react-refresh/only-export-components': ['error', {
+        allowExportNames: ['badgeVariants', 'buttonVariants'],
+      }],
+    },
+  },
 ])

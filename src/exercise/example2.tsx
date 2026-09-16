@@ -80,34 +80,22 @@
  *
  * ============================================================================
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import type { SearchableDeployment } from "@/types/deployment";
 
-export function useDeploymentFilters<T>(deployments: T[]) {
+export function useDeploymentFilters<T extends SearchableDeployment>(deployments: readonly T[]) {
   const [search, setSearch] = useState("");
 
-  /**
-   * TODO
-   *
-   * Return:
-   *
-   * {
-   *   search,
-   *   setSearch,
-   *   filteredDeployments
-   * }
-   */
+  const filteredDeployments = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return deployments.filter((deployment) => deployment.application.toLowerCase().includes(query));
+  }, [deployments, search]);
 
   return {
     search,
     setSearch,
-    filteredDeployments: deployments,
+    filteredDeployments,
   };
 }
 
-const SearchPlaceholder = () => {
- // This is a placeholder component to demonstrate the usage of the useDeploymentFilters hook.
- //where you can use the hook and display the filtered deployments based on the search input.
- //use sadcn components for input and list rendering.
-};
-
-export default SearchPlaceholder;
+export default useDeploymentFilters;
