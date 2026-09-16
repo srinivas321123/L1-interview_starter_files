@@ -1,7 +1,8 @@
+import type { Deployment } from "@/types/deployment";
 import {data} from "../data/MOCK_DATA";
 
 export async function getDeployments() {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  return data;
+  return data as Deployment[];
 }
