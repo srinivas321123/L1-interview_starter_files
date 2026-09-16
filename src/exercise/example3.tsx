@@ -108,9 +108,12 @@
  *
  * ============================================================================
  */
-
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-
+import { getDeployments } from "../api/diploymentApi.ts";
+import DeploymentCard from "./example1";
+import { useDeploymentFilters } from "./example2";
+import { Button } from "@/components/ui/button";
 /**
  * TODO
  *
@@ -128,9 +131,79 @@ import { useQuery } from "@tanstack/react-query";
  */
 
 export default function Example3() {
- // This is a placeholder component to demonstrate the usage of the useQuery hook.
+  const [statusFilter, setStatusFilter] = useState("All");
+  const {
+    data: deployments = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["deployments"],
+    queryFn: getDeployments,
+  });
+  const {
+  search,
+  setSearch,
+  filteredDeployments,
+} = useDeploymentFilters(deployments);
+const statusFilteredDeployments =
+  statusFilter === "All"
+    ? filteredDeployments
+    : filteredDeployments.filter(
+        (deployment) => deployment.status === statusFilter
+      );
+if (isLoading) {
+  return <div className="container mx-auto p-6">Loading...</div>;
+}
 
-  return <div className="container mx-auto p-6">
-    // You can use the useQuery hook to fetch deployments and display them using the DeploymentCard component.
-  </div>;
+if (isError) {
+  return (
+    <div className="container mx-auto p-6">
+      Failed to load deployments.
+    </div>
+  );
+}
+
+  return (
+  <div className="container mx-auto p-6">
+    <h1 className="text-2xl font-bold">Deployment Queue</h1>
+
+    <p className="mt-2 text-muted-foreground">
+      Total Deployments: {deployments.length}
+    </p>
+    <input
+  type="text"
+  value={search}
+  onChange={(event) => setSearch(event.target.value)}
+  placeholder="Search by application name"
+  className="mt-4 w-full rounded-md border px-3 py-2"
+/>
+<div className="mt-4 flex flex-wrap gap-2">
+  {["All", "Pending", "In Progress", "Completed", "Failed"].map(
+    (status) => (
+      <Button
+        key={status}
+        variant={statusFilter === status ? "default" : "outline"}
+        onClick={() => setStatusFilter(status)}
+      >
+        {status}
+      </Button>
+    )
+  )}
+</div>
+{statusFilteredDeployments.length === 0 ? (
+  <p className="mt-6 text-center text-muted-foreground">
+    No deployments found.
+  </p>
+) : ( 
+<div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+  {statusFilteredDeployments.map((deployment) => (
+    <DeploymentCard
+      key={deployment.id}
+      deployment={deployment}
+    />
+  ))}
+</div>
+)}
+  </div>
+);
 }

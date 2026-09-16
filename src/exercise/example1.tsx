@@ -107,8 +107,64 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-const DeploymentCard = () => {
-  return <div>DeploymentCard</div>;
+export interface Deployment {
+  id: string;
+  application: string;
+  version: string;
+  environment: "Production" | "QA" | "Development" | "Staging";
+  status: "Pending" | "In Progress" | "Completed";
+  requestedBy: string;
+  requestedAt: string;
+  scheduledAt: string;
+  region: string;
+  priority: "Low" | "Medium" | "High" | "Critical";
+}
+interface DeploymentCardProps {
+  deployment: Deployment;
+}
+
+const DeploymentCard = ({ deployment }: DeploymentCardProps) => {
+  const statusFlow: Record<Deployment["status"], Deployment["status"] | null> = {
+    Pending: "In Progress",
+    "In Progress": "Completed",
+    Completed: null,
+  };
+
+  const nextStatus = statusFlow[deployment.status];
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{deployment.application}</CardTitle>
+        <CardDescription>
+          <div>{deployment.id}</div>
+          <div>{deployment.version}</div>
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent>
+        <div className="flex gap-2">
+          <Badge>{deployment.environment}</Badge>
+          <Badge>{deployment.status}</Badge>
+        </div>
+
+        <Separator className="my-4" />
+
+        <div className="space-y-2">
+          <p>{deployment.requestedBy}</p>
+          <p>
+            Scheduled:{" "}
+            {new Date(deployment.scheduledAt).toLocaleString()}
+          </p>
+        </div>
+      </CardContent>
+
+      <CardFooter>
+        <Button disabled={!nextStatus}>
+          {nextStatus ? `Advance to ${nextStatus}` : "Completed"}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
 };
 
 export default DeploymentCard;
