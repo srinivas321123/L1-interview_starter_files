@@ -1,99 +1,3 @@
-
-
-/**
- * ============================================================================
- * Exercise 1 - Deployment Card
- * ============================================================================
- *
- * Scenario
- * --------
- *
- * Your team is building an internal Deployment Queue application used by
- * Release Engineers to monitor application deployments.
- *
- * A mock API response has been provided in src/data/MOCK_DATA.ts.
- *
- * In this exercise, your task is to build a reusable DeploymentCard component.
- *
- * ============================================================================
- *
- * ## Requirements
-
-### 1. Component Setup
-
-- Create a `DeploymentCard` component.
-- Keep the provided imports unchanged.
-- Use React with TypeScript.
-- Use the existing Shadcn UI components:
-  - Card
-  - Badge
-  - Button
-  - Separator
-
----
-### 2. Deployment Interface
-
-Create the `Deployment` interface with the mockdata properties:
-make sure 
-environment: "Production" | "QA" | "Development" | "Staging";
-status: "Pending" | "In Progress" | "Completed";
-priority: "Low" | "Medium" | "High" | "Critical";
-
-
-
- * ============================================================================
- *
- * UI Requirements
- *
- * • Use the provided shadcn/ui components where appropriate.
- *
- * • Environment and Status should be displayed using badges.
- *
- * • Display a "advance to [next status]" button at the bottom of the card.
- *
- * • Use appropriate spacing and visual hierarchy.
- *
- * • The component should remain responsive.
- *
- * ============================================================================
- *
- * Technical Expectations
- *
- * • Use TypeScript.
- *
- * • Define appropriate interfaces/types.
- *
- * • Keep the component reusable.
- *
- * • Do not hardcode values.
- *
- * • Avoid unnecessary duplication.
- *
- * • Write clean, maintainable code.
- *
- * ============================================================================
- *
- * Evaluation
- *
- * We will evaluate:
- *
- * ✓ React Fundamentals
- * ✓ Component Composition
- * ✓ TypeScript
- * ✓ Code Organization
- * ✓ Reusability
- * ✓ Tailwind CSS
- *
- * ============================================================================
- *
- * Note
- *
- * This exercise focuses only on the DeploymentCard component.
- *
- * Additional requirements will be introduced in later exercises.
- *
- * ============================================================================
- */
 import {
   Card,
   CardContent,
@@ -102,13 +6,136 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+export type Environment =
+  | "Production"
+  | "QA"
+  | "Development"
+  | "Staging";
 
-const DeploymentCard = () => {
-  return <div>DeploymentCard</div>;
+export type DeploymentStatus =
+  | "Pending"
+  | "In Progress"
+  | "Completed"
+  | "Failed";
+
+export type Priority =
+  | "Low"
+  | "Medium"
+  | "High"
+  | "Critical";
+
+export interface Deployment {
+  id: string;
+  application: string;
+  version: string;
+  environment: Environment;
+  status: DeploymentStatus;
+  requestedBy: string;
+  requestedAt: string;
+  scheduledAt: string;
+  region: string;
+  priority: Priority;
+}
+interface DeploymentCardProps {
+  deployment: Deployment;
+  onStatusChange?: (deploymentId: string, status: DeploymentStatus) => void;
+}
+const STATUS_FLOW: Record<DeploymentStatus, DeploymentStatus | null> = {
+  Pending: "In Progress",
+  "In Progress": "Completed",
+  Completed: null,
 };
+const DeploymentCard = ({
+  deployment,
+  onStatusChange,
+}: DeploymentCardProps) => {
+  const nextStatus = STATUS_FLOW[deployment.status];
+  const handleAdvanceStatus = () => {
+    if (!nextStatus) {
+      return;
+    }
+    onStatusChange?.(deployment.id, nextStatus);
+  };
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleString();
+  };
+  return (
+    <Card className="w-full max-w-md">
 
+      <CardHeader>
+
+        <div className="flex items-start justify-between gap-4">
+
+          <div>
+
+            <CardTitle>{deployment.application}</CardTitle>
+            <CardDescription className="mt-1">
+
+              {deployment.id} • {deployment.version}
+            </CardDescription>
+          </div>
+          <Badge variant="outline">{deployment.priority}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+
+        <div className="flex flex-wrap gap-2">
+
+          <Badge>{deployment.environment}</Badge>
+          <Badge variant="secondary"> {deployment.status} </Badge>
+        </div>
+        <Separator />
+        <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+
+          <div>
+
+            <p className="text-muted-foreground"> Requested By </p>
+            <p className="font-medium"> {deployment.requestedBy} </p>
+          </div>
+          <div>
+
+            <p className="text-muted-foreground"> Region </p>
+            <p className="font-medium"> {deployment.region} </p>
+          </div>
+          <div>
+
+            <p className="text-muted-foreground"> Requested At </p>
+            <p className="font-medium">
+
+              {formatDate(deployment.requestedAt)}
+            </p>
+          </div>
+          <div>
+
+            <p className="text-muted-foreground"> Scheduled At </p>
+            <p className="font-medium">
+
+              {formatDate(deployment.scheduledAt)}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter>
+
+        {nextStatus ? (
+          <Button className="w-full" onClick={handleAdvanceStatus}>
+
+            Advance to {nextStatus}
+          </Button>
+        ) : (
+          <Button className="w-full" disabled>
+
+            Deployment Completed
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
+  );
+};
 export default DeploymentCard;
+export type {
+  DeploymentCardProps
+};
