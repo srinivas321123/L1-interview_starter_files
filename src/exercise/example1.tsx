@@ -49,6 +49,10 @@ priority: "Low" | "Medium" | "High" | "Critical";
  *
  * • Environment and Status should be displayed using badges.
  *
+ * • Color the left border of the card based on priority.
+ *   Priority values in the data are: Low, Medium, High, and Critical.
+ *   Choose a distinct color for each priority.
+ *
  * • Display a "advance to [next status]" button at the bottom of the card.
  *
  * • Use appropriate spacing and visual hierarchy.
