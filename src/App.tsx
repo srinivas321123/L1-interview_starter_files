@@ -1,7 +1,11 @@
+import Example3 from "./exercise/example3";
+
 const App = () => {
-  return <h1 className="flex justify-center items-center h-screen text-3xl font-bold">
- Please go to the exercise folder and open the example1.tsx file to complete the exercise.
-  </h1>;
+  return (
+    <div className="flex flex-col gap-4 min-h-screen bg-slate-100 p-4">
+      <Example3 />
+    </div>
+  )
 };
 
 export default App;
