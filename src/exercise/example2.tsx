@@ -80,9 +80,11 @@
  *
  * ============================================================================
  */
-import { useState } from "react";
-
-export function useDeploymentFilters<T>(deployments: T[]) {
+import { useState, useMemo } from "react";
+interface Deployment {
+  application: string;
+}
+export function useDeploymentFilters<T extends Deployment>(deployments: T[]) {
   const [search, setSearch] = useState("");
 
   /**
@@ -96,11 +98,22 @@ export function useDeploymentFilters<T>(deployments: T[]) {
    *   filteredDeployments
    * }
    */
+  const filteredDeployments = useMemo(() => {
+  const searchText = search.trim().toLowerCase();
+
+  if (!searchText) {
+    return deployments;
+  }
+
+  return deployments.filter((deployment) =>
+    deployment.application.toLowerCase().includes(searchText)
+  );
+}, [deployments, search]);
 
   return {
     search,
     setSearch,
-    filteredDeployments: deployments,
+    filteredDeployments,
   };
 }
 
