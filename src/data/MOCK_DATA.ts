@@ -1,3 +1,5 @@
+import type { Deployment } from "@/types/deployment";
+
 export const data =  
   [
     {
@@ -120,4 +122,4 @@ export const data =
       "region": "India",
       "priority": "High"
     }
-  ]
+  ] satisfies Deployment[];
