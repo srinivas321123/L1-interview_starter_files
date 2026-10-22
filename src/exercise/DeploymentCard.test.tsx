@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import  DeploymentCard  from "./DeploymentCard";
 
-const deployment = {
+import type { Deployment } from "@/types/deployment";
+
+const deployment: Deployment = {
   id: "DEP-1001",
   application: "Customer Portal",
   version: "v4.2.1",
@@ -62,7 +64,7 @@ describe("DeploymentCard", () => {
     render(<DeploymentCard deployment={deployment} />);
 
     expect(
-      screen.getByText(/2026/i)
+      screen.getByText("Jul 20, 2026")
     ).toBeInTheDocument();
   });
 

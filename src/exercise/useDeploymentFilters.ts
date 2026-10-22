@@ -80,27 +80,46 @@
  *
  * ============================================================================
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-export function useDeploymentFilters<T>(deployments: T[]) {
+import type {
+  DeploymentStatus,
+  StatusFilter,
+} from "@/types/deployment";
+
+type FilterableDeployment = {
+  application: string;
+  status: DeploymentStatus;
+};
+
+
+export function useDeploymentFilters<T extends FilterableDeployment>(deployments: T[]) {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState<StatusFilter>("All");
 
-  /**
-   * TODO
-   *
-   * Return:
-   *
-   * {
-   *   search,
-   *   setSearch,
-   *   filteredDeployments
-   * }
-   */
+  const filteredDeployments = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    return deployments.filter((deployment) => {
+      const matchesSearch = deployment.application
+        .toLowerCase()
+        .includes(normalizedSearch);
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        deployment.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [deployments, search, statusFilter]);
 
   return {
     search,
     setSearch,
-    filteredDeployments: deployments,
+    statusFilter,
+    setStatusFilter,
+    filteredDeployments,
   };
 }
 
